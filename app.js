@@ -27,7 +27,6 @@ var samlStrategy = new saml.Strategy({
   cert        : idpCert
 }, function (profile, done) {
   if (!profile) {
-    console.log('Inside the error section');
     return done(new Error('SSO failed'), null);
   } else {
     return done(null, profile);
@@ -105,7 +104,7 @@ router.post(process.env.SAML_CALLBACK_PATH,
   }
 );
 
-// Get the SP Metadata using this URL.
+// Get the SP Metadata using this location.
 router.get('/metadata', function (request, response) {
 	response.type('application/xml');
 	response.status(200).send(samlStrategy.generateServiceProviderMetadata());
