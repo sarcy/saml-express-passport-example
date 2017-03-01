@@ -1,0 +1,23 @@
+extends layout.pug
+
+block content
+  h4 Logged in user details
+  input(type='hidden', id='hidden-user-object', value=JSON.stringify(user))
+  div(id='logged-in-user')
+	
+  br
+  a(href='/logout') Logout
+	
+block footerScript
+  script.
+    var user = JSON.parse(document.getElementById('hidden-user-object').value);
+    
+    var list = document.createElement('ul');
+
+    Object.keys(user).forEach(function (key, index) {
+      var temp = document.createElement('li');
+      temp.innerHTML = key + ' = ' + user[key];
+      list.appendChild(temp);
+    });
+
+    document.getElementById('logged-in-user').appendChild(list);

@@ -1,0 +1,22 @@
+{
+  "name": "saml-app",
+  "version": "1.0.0",
+  "description": "A very light weight app to test SAML SSO using passport.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "author": "Sarcastyx",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^4.0.0",
+    "express": "^4.14.1",
+    "express-session": "^1.15.1",
+    "passport": "^0.3.2"
+  },
+  "devDependencies": {
+    "body-parser": "^1.16.1",
+    "passport-saml": "^0.15.0",
+    "pug": "^2.0.0-beta11"
+  }
+}
