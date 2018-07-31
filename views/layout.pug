@@ -2,6 +2,7 @@ doctype html
 html(lang='en')
   head
     meta(charset='utf-8')
+    meta(http-equiv='X-UA-Compatible' content='IE=edge')
     title.
       Something Something SAML
   
@@ -9,3 +10,15 @@ html(lang='en')
     block content
     
   block footerScript
+    script(type='text/javascript').
+      var user = JSON.parse(document.getElementById('hidden-user-object').value);
+      
+      var list = document.createElement('ul');
+
+      Object.keys(user).forEach(function (key, index) {
+        var temp = document.createElement('li');
+        temp.innerHTML = key + ' = ' + user[key];
+        list.appendChild(temp);
+      });
+
+      document.getElementById('logged-in-user').appendChild(list);

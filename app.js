@@ -5,7 +5,6 @@ var passport = require('passport'),
     saml     = require('passport-saml'),
     fs       = require('fs');
 
-
 // Read the IdP Cert from the filesystem. 
 // Uncomment this line if you want to validate the response with the cert.
 // var idpCert = fs.readFileSync('./idp-cert.pem', 'utf-8');
@@ -19,12 +18,23 @@ passport.deserializeUser(function (user, done) {
   done(null, user);
 });
 
+let defaultCallbackUrl = process.env.SERVER_HOST + process.env.SAML_CALLBACK_PATH;
+let defaultLogoutCallback = process.env.SERVER_HOST + '/logout/callback';
+let relayStateUrl = process.env.SERVER_HOST + '/relay';
+
 // Setup the SAML strategy for the SSO process.
+// To add RelayState to the original request we can add:
+// additionalParams  : {
+//   'RelayState' : 'http://localhost:4000'
+// },
 var samlStrategy = new saml.Strategy({
-  callbackUrl : process.env.SERVER_HOST + process.env.SAML_CALLBACK_PATH,
-  entryPoint  : process.env.IDP_ENTRYPOINT,
-  issuer      : process.env.SP_ENTITYID,
-  cert        : idpCert
+  callbackUrl       : defaultCallbackUrl,
+  entryPoint        : process.env.IDP_ENTRYPOINT,
+  issuer            : process.env.SP_ENTITYID,
+  identifierFormat  : process.env.IDENTIFIER,
+  cert              : idpCert,
+  logoutUrl         : process.env.IDP_LOGOUT,
+  logoutCallbackUrl : defaultLogoutCallback
 }, function (profile, done) {
   if (!profile) {
     return done(new Error('SSO failed'), null);
@@ -74,6 +84,16 @@ router.get('/login',
   })
 );
 
+// Redirect the user to the relay state URL.
+router.get('/relay', (request, response) => {
+  if (request.isAuthenticated()) {
+    console.log('The user is', request.user);
+    response.status(200).send('User is ' + request.user.username);
+  } else {
+    response.redirect('/login');
+  }
+});
+
 // Handle the Logged in user route.
 router.get('/loggedin', function (request, response) {
   if (request.isAuthenticated()) {
@@ -89,9 +109,13 @@ router.get('/login/fail', function (request, response) {
   response.status(200).send('Could not login.');
 });
 
-router.get('/logout', function (request, response) {
-	request.session.destroy();
-	response.redirect(process.env.IDP_LOGOUT + '?goto=' + process.env.SERVER_HOST);
+// Using Single Logout
+router.get('/logout', (request, response) => {
+  // requestUrl is the actual SAML SLO URL.
+  samlStrategy.logout(request, function (err, requestUrl) {
+    request.logout();
+    response.redirect(requestUrl);
+  });
 });
 
 // Handle the SAML callback URL.
@@ -100,9 +124,20 @@ router.post(process.env.SAML_CALLBACK_PATH,
     failureRedirect : '/login/fail',
     failureFlash    : true
   }), function (request, response) {
-    response.redirect('/loggedin');
+    let relayState = request.query && request.query.RelayState || request.body && request.body.RelayState;
+    if (relayState !== null && relayState !== undefined && relayState !== '') {
+      response.redirect(relayState);
+    } else {
+      response.redirect('/loggedin');
+    }
   }
 );
+
+// The callback for the SLO.
+router.post('/logout/callback', function (request, response) {
+  request.logout();
+  response.redirect('/');
+});
 
 // Get the SP Metadata using this location.
 router.get('/metadata', function (request, response) {
