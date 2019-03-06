@@ -18,9 +18,14 @@ passport.deserializeUser(function (user, done) {
   done(null, user);
 });
 
-let defaultCallbackUrl = process.env.SERVER_HOST + process.env.SAML_CALLBACK_PATH;
-let defaultLogoutCallback = process.env.SERVER_HOST + '/logout/callback';
-let relayStateUrl = process.env.SERVER_HOST + '/relay';
+const PORT = process.env.PORT || 8080;
+
+// Local server URL.
+let localServerURL = process.env.SERVER_HOST + ":" + PORT;
+
+let defaultCallbackUrl = localServerURL + process.env.SAML_CALLBACK_PATH;
+let defaultLogoutCallback = localServerURL + '/logout/callback';
+let relayStateUrl = localServerURL + '/relay';
 
 // Setup the SAML strategy for the SSO process.
 // To add RelayState to the original request we can add:
@@ -153,6 +158,6 @@ router.get('*', function (request, response) {
 app.use('/', router);
 
 // Start the Express server.
-app.listen(process.env.PORT, function () {
-  console.log('Express server is up and running and listening on', process.env.PORT);
+app.listen(PORT, function () {
+  console.log('Express server is up and running and listening on', PORT);
 });
