@@ -2,3 +2,4 @@ node_modues/
 .DS_Store
 .npm-debug
 idp-cert.pem
+node_modules
